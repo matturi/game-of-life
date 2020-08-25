@@ -1,0 +1,31 @@
+node {
+    notify ('Started')
+    stage('checkout') {
+        git 'https://github.com/matturi/game-of-life'
+    }
+
+    def project_path = "pom.xml"
+
+    dir(project_path) {
+        stage('compile,test and package') {
+            sh 'mvn clean package'
+        }
+    
+        stage('archival') {
+            archiveArtifacts 'target/*.jar'
+        }
+
+        stage('unit test') {
+            junit 'target/surefire-reports/*.xml'
+
+        }
+    }
+}
+def notify(status){
+    emailext (
+      to: "susmitha.matturi44@gmail.com",
+      subject: "${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'",
+      body: """<p>${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':</p>
+        <p>Check console output at <a href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]</a></p>""",
+    )
+}
